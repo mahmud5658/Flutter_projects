@@ -1,42 +1,27 @@
 import 'package:crudfirebase/services/database.dart';
 import 'package:crudfirebase/utils/utils.dart';
+import 'package:crudfirebase/widgets/app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:random_string/random_string.dart';
 
-class Employee extends StatefulWidget {
-  const Employee({super.key});
+class EmployeeScreen extends StatefulWidget {
+  const EmployeeScreen({super.key});
 
   @override
-  State<Employee> createState() => _EmployeeState();
+  State<EmployeeScreen> createState() => _EmployeeScreenState();
 }
 
-class _EmployeeState extends State<Employee> {
+class _EmployeeScreenState extends State<EmployeeScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
 
   bool _loading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Flutter',
-            style: TextStyle(
-                color: Colors.blue, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            'Firebase',
-            style: TextStyle(
-                color: Colors.orange,
-                fontSize: 24,
-                fontWeight: FontWeight.bold),
-          ),
-        ],
-      )),
+      appBar: appBar(),
       body: Padding(
         padding: EdgeInsets.all(20),
         child: Column(
@@ -45,14 +30,7 @@ class _EmployeeState extends State<Employee> {
               controller: _nameController,
               keyboardType: TextInputType.name,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange)),
                 labelText: 'Name',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
               ),
             ),
             SizedBox(
@@ -62,14 +40,7 @@ class _EmployeeState extends State<Employee> {
               controller: _ageController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange)),
                 labelText: 'Age',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
               ),
             ),
             SizedBox(
@@ -79,14 +50,7 @@ class _EmployeeState extends State<Employee> {
               controller: _locationController,
               keyboardType: TextInputType.name,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.orange)),
                 labelText: 'Location',
-                labelStyle: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
               ),
             ),
             SizedBox(
@@ -94,15 +58,12 @@ class _EmployeeState extends State<Employee> {
             ),
             Visibility(
               visible: _loading == false,
-              replacement: Center(child: CircularProgressIndicator(),),
+              replacement: Center(
+                child: CircularProgressIndicator(
+                  color: Colors.blue,
+                ),
+              ),
               child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    fixedSize: Size(double.maxFinite, 50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
                   onPressed: () async {
                     _addEmployee();
                   },
@@ -129,11 +90,13 @@ class _EmployeeState extends State<Employee> {
       'id': id
     };
     Database.addEmloyeeDetails(employeeInfo, id).then((value) {
-      Utils.toastMsg('Successfully uploaded Employee data');
+      Utils.toastMsg('Successfully uploaded data to database');
       clearText();
       setState(() {
         _loading = false;
       });
+    }).catchError((error) {
+      Utils.toastMsg('Upload data to database failed!!!');
     });
   }
 
