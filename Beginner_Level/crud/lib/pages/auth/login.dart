@@ -1,6 +1,9 @@
 import 'package:crud/firebase_services/auth.dart';
 import 'package:crud/pages/auth/login_with_phone.dart';
 import 'package:crud/pages/auth/sign_up.dart';
+import 'package:crud/pages/employee/home.dart';
+import 'package:crud/utils/app_constant.dart';
+import 'package:crud/utils/utils.dart';
 import 'package:crud/widgets/app_bar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _loading = false;
+  bool _showPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +44,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.email_outlined)),
                     validator: (value) {
-                      if (value!.isEmpty) {
-                        return 'Enter an email';
+                      if (value?.trim().isEmpty ?? true) {
+                        return 'Enter your email';
+                      } else {
+                        if (!AppConstant.emailRegExp.hasMatch(value!.trim())) {
+                          return 'Enter your valid email address';
+                        }
                       }
                       return null;
                     },
@@ -51,15 +59,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextFormField(
                     controller: _passwordController,
-                    keyboardType: TextInputType.name,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    keyboardType: TextInputType.visiblePassword,
+                    obscureText: _showPassword == false,
+                    decoration: InputDecoration(
                         labelText: 'password',
-                        prefixIcon: Icon(Icons.password_outlined),
-                        suffixIcon: Icon(Icons.remove_red_eye_outlined)),
+                        prefixIcon: const Icon(Icons.password_outlined),
+                        suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _showPassword = !_showPassword;
+                              });
+                            },
+                            icon: _showPassword
+                                ? const Icon(Icons.remove_red_eye)
+                                : const Icon(Icons.visibility_off))),
                     validator: (value) {
                       if (value!.isEmpty) {
                         return 'Enter an password';
+                      } else {
+                        if (!AppConstant.passwordRegex.hasMatch(value)) {
+                          return 'Enter an vaild password';
+                        }
                       }
                       return null;
                     },
@@ -73,8 +93,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: CircularProgressIndicator(),
                     ),
                     child: Visibility(
-                      visible: _loading==false,
-                      replacement: const Center(child: CircularProgressIndicator(),),
+                      visible: _loading == false,
+                      replacement: const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.blue,
+                        ),
+                      ),
                       child: ElevatedButton(
                           onPressed: () {
                             if (_key.currentState!.validate()) {
@@ -137,15 +161,23 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
   }
-
-  void _login() {
+  void _login() async {
     setState(() {
       _loading = true;
     });
-    Auth.loginWithEmailAndPassword(
+    final isSuccess = await Auth.loginWithEmailAndPassword(
         _emailController.text.trim(), _passwordController.text);
     setState(() {
       _loading = false;
     });
+    if (isSuccess) {
+       Utils.toastMsg('Successfully logged in');
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false);
+      }
+    }
   }
 }
